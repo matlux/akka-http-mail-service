@@ -3,6 +3,7 @@ package net.matlux
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.HttpHeader.ParsingResult.Ok
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
@@ -32,9 +33,12 @@ object HelloWorldService {
             }
           }
 
-      }
+      } ~ path("bar") {
+        complete {
+          HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>bar</h1>")
+        }}
 
 
-    Http().bindAndHandle(routes, config.getString("http.address"), config.getInt("http.port"))
+        Http().bindAndHandle(routes, config.getString("http.address"), config.getInt("http.port"))
   }
 }
