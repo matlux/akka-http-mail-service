@@ -23,8 +23,8 @@ class HelloWorldServiceTest extends  WordSpec with Matchers with ScalatestRouteT
 
     "return a <>bar<> html message for GET requests to the foo path" in {
       // tests:
-      Get() ~> routes ~> check {
-        responseAs[String] shouldEqual "Captain on the bridge!"
+      Get("/bar") ~> routes ~> check {
+        responseAs[String] shouldEqual "<br>bar<br>"
       }
     }
   }
