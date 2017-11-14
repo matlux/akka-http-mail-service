@@ -9,35 +9,49 @@
     <version>1.0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <url>https://github.com/thenewmotion/akka-http-helloworld</url>
+    <url>https://github.com/matlux/akka-http-hello-world</url>
 
     <properties>
         <akka.version>2.5.4</akka.version>
-        <akka.http.version>10.0.10</akka.http.version>
+        <akka.http.version>10.0.5</akka.http.version>
+        <scalatest.version>3.0.3</scalatest.version>
         <tomcat.version>7.0.34</tomcat.version>
-        <scala.version>2.11</scala.version>
+        <scala.version>2.11.8</scala.version>
+        <scala.compact.version>2.11</scala.compact.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-http_${scala.version}</artifactId>
+            <artifactId>akka-http_${scala.compact.version}</artifactId>
             <version>${akka.http.version}</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-http-spray-json_${scala.version}</artifactId>
+            <artifactId>akka-http-spray-json_${scala.compact.version}</artifactId>
             <version>${akka.http.version}</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-stream_${scala.version}</artifactId>
+            <artifactId>akka-stream_${scala.compact.version}</artifactId>
             <version>${akka.version}</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-actor_${scala.version}</artifactId>
+            <artifactId>akka-actor_${scala.compact.version}</artifactId>
             <version>${akka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-http-testkit_${scala.compact.version}</artifactId>
+            <version>${akka.http.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_${scala.compact.version}</artifactId>
+            <version>${scalatest.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -62,7 +76,8 @@
                         </goals>
                         <configuration>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>org.sonatype.haven.HavenCli</mainClass>
                                 </transformer>
                             </transformers>
@@ -89,20 +104,51 @@
                 <executions>
                     <execution>
                         <goals>
+                            <goal>add-source</goal>
                             <goal>compile</goal>
                             <goal>testCompile</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
+                    <scalaVersion>${scala.version}</scalaVersion>>
                     <launchers>
                         <launcher>
                             <id>foo</id>
-                            <mainClass>net.matlux.HelloWorldService</mainClass>
+                            <mainClass>net.matlux.HelloWorldServer</mainClass>
                         </launcher>
                         <!-- you could define other launcher -->
                     </launchers>
+                    <!-- <ccTestGoals>scalatest:test</ccTestGoals> -->
                 </configuration>
+            </plugin>
+            <!-- disable surefire -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
+            <!-- enable scalatest -->
+            <plugin>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-maven-plugin</artifactId>
+                <version>1.0</version>
+                <configuration>
+                    <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+                    <junitxml>.</junitxml>
+                    <filereports>WDF TestSuite.txt</filereports>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>test</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
