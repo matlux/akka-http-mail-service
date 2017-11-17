@@ -6,4 +6,4 @@ ADD . /root
 WORKDIR /root
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "target/scala-2.11/akka-http-hello-world.jar"]
+ENTRYPOINT ["java", "-jar", "target/uber-akka-http-hello-world-1.0.2-SNAPSHOT.jar"]
