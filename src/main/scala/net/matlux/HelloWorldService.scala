@@ -12,11 +12,15 @@ import com.typesafe.config.{Config, ConfigFactory}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.directives.RespondWithDirectives
 import akka.stream.scaladsl.{Flow, Source}
 import akka.util.{ByteString, Timeout}
 import net.matlux.utils.Atom
 import spray.json.DefaultJsonProtocol._
 import spray.json._
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import akka.http.scaladsl.model.HttpMethods._
+import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Credentials`, `Access-Control-Allow-Headers`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Origin`}
 
 import scala.concurrent.duration._
 import akka.pattern.ask
@@ -24,6 +28,10 @@ import net.matlux.HelloWorldServer.{Bid, Bids, GetBids}
 
 import scala.util.Random
 
+/*trait EnableCORSDirectives extends RespondWithDirectives {
+
+
+}*/
 
 trait HelloWorldService {
   implicit val system: ActorSystem
@@ -86,8 +94,25 @@ trait HelloWorldService {
       }
 
   }
+  private val allowedCorsVerbs = List(
+    CONNECT, DELETE, GET, HEAD, OPTIONS,
+    PATCH, POST, PUT, TRACE
+  )
 
-    val routes = path("hello") {
+  private val allowedCorsHeaders = List(
+    "X-Requested-With", "content-type", "origin", "accept"
+  )
+
+  lazy val enableCORS =
+    respondWithHeader(`Access-Control-Allow-Origin`.`null`) &
+      respondWithHeader(`Access-Control-Allow-Methods`(allowedCorsVerbs)) &
+      respondWithHeader(`Access-Control-Allow-Headers`(allowedCorsHeaders)) &
+      respondWithHeader(`Access-Control-Allow-Credentials`(true))
+
+
+  val routes = enableCORS {
+
+    path("hello") {
       get {
         complete {
           HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Say hello to akka-http</h1>")
@@ -102,7 +127,7 @@ trait HelloWorldService {
     } ~ path("bar") {
       complete {
         HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>bar</h1>")
-      }
+
     } ~
       get {
         pathPrefix("item" / LongNumber) { id =>
@@ -151,7 +176,7 @@ trait HelloWorldService {
             val bids: Future[Bids] = (auction ? GetBids).mapTo[Bids]
             complete(bids)
           }
-      }
+      }}}
 
 
 
