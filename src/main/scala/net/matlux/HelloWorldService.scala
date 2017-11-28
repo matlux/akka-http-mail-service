@@ -27,6 +27,7 @@ import akka.pattern.ask
 import net.matlux.HelloWorldServer.{Bid, Bids, GetBids}
 
 import scala.util.Random
+import Math._
 
 /*trait EnableCORSDirectives extends RespondWithDirectives {
 
@@ -124,7 +125,19 @@ trait HelloWorldService {
           }
         }
 
-    } ~ path("bar") {
+    } ~ path("compute") {
+      complete {
+        for{i <- 0.to(1000)
+          j <- 0.to(1000)
+
+        } yield (sin(sqrt(i * j)))
+
+
+        //for()
+        HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>result</h1>")
+
+      }
+    }~ path("bar") {
       complete {
         HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>bar</h1>")
 
