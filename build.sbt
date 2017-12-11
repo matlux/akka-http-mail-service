@@ -7,6 +7,8 @@ scalaVersion := "2.11.8"
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 assemblyJarName in assembly := "akka-http-hello-world.jar"
 
+mainClass in Compile := Some("net.matlux.HelloWorldServer")
+
 libraryDependencies ++= {
   val akkaStreamVersion = "2.5.4"
   val akkaHttpVersion = "10.0.10"
@@ -19,7 +21,9 @@ libraryDependencies ++= {
     // Only when running against Akka 2.5 explicitly depend on akka-streams in same version as akka-actor
     "com.typesafe.akka" %% "akka-stream" % akkaStreamVersion, // or whatever the latest version is
     "com.typesafe.akka" %% "akka-actor"  % akkaStreamVersion,
-    "ch.megard" %% "akka-http-cors" % "0.2.2",
+
+    //java stuff
+    "org.jolokia" % "jolokia-jvm" % "1.3.7" classifier "agent",
 
     "org.scalatest" %% "scalatest" % scalaTestV % Test,
     "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test

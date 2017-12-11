@@ -18,7 +18,6 @@ import akka.util.{ByteString, Timeout}
 import net.matlux.utils.Atom
 import spray.json.DefaultJsonProtocol._
 import spray.json._
-import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Credentials`, `Access-Control-Allow-Headers`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Origin`}
 
@@ -75,26 +74,11 @@ trait HelloWorldService {
     Iterator.continually(Random.nextInt()))
 
 
-
-
   // these are from spray-json
   implicit val bidFormat = jsonFormat2(Bid)
   implicit val bidsFormat = jsonFormat1(Bids)
 
 
-  val routesold = path("hello") {
-    get {
-      complete {
-        HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Say hello to akka-http</h1>")
-      }
-    } ~
-      post {
-        complete {
-          HttpEntity(ContentTypes.`application/json`, "{\"say\" :\"hello post to akka-http\"}")
-        }
-      }
-
-  }
   private val allowedCorsVerbs = List(
     CONNECT, DELETE, GET, HEAD, OPTIONS,
     PATCH, POST, PUT, TRACE
@@ -127,8 +111,8 @@ trait HelloWorldService {
 
     } ~ path("compute") {
       complete {
-        for{i <- 0.to(1000)
-          j <- 0.to(1000)
+        for {i <- 0.to(1000)
+             j <- 0.to(1000)
 
         } yield (sin(sqrt(i * j)))
 
@@ -137,10 +121,21 @@ trait HelloWorldService {
         HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>result</h1>")
 
       }
-    }~ path("bar") {
+    } ~ path("kill") {
+      complete {
+        System.exit(0)
+        HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>too late</h1>")
+      }
+    } ~ path("health") {
+      complete {
+        HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>service is healthy</h1>")
+
+      }
+    } ~ path("bar") {
       complete {
         HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>bar</h1>")
 
+      }
     } ~
       get {
         pathPrefix("item" / LongNumber) { id =>
@@ -189,9 +184,8 @@ trait HelloWorldService {
             val bids: Future[Bids] = (auction ? GetBids).mapTo[Bids]
             complete(bids)
           }
-      }}}
-
-
+      }
+  }
 
 
 
