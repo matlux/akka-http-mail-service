@@ -71,14 +71,8 @@ trait SocialNetworkService extends JsonMarshallers{
     Some(Relationship("HasConnection","John", "Peter"))
   }
 
-  def saveOrder(order: RelationshipGraph): Future[Done] = Future {
-    db.swap { currentDb: Map[String, Relationship] =>
-      val newMap = order.relationships.foldLeft(Map[String, Relationship]()) { (acc: Map[String, Relationship], item: Relationship) =>
-        acc + (item.startNode -> item)
-      }
-      currentDb ++ newMap
-    }
-    Done
+  def connections(graph: RelationshipGraph): Future[List[PersonConnections]] = Future {
+    List(PersonConnections("Paul", 1, 2))
   }
 
   // streams are re-usable so we can define it here
@@ -106,35 +100,7 @@ trait SocialNetworkService extends JsonMarshallers{
 
   val routes = enableCORS {
 
-    path("hello") {
-      get {
-        complete {
-          HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Say hello to akka-http</h1>")
-        }
-      } ~
-        post {
-          complete {
-            HttpEntity(ContentTypes.`application/json`, "{\"say\" :\"hello post to akka-http\"}")
-          }
-        }
-
-    } ~ path("compute") {
-      complete {
-        for {i <- 0.to(1000)
-             j <- 0.to(1000)
-
-        } yield (sin(sqrt(i * j)))
-
-
-        //for()
-        HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>result</h1>")
-
-      }
-    } ~ path("test") {
-      complete {
-        Some(Relationship("HasConnection","John", "Peter"))
-      }
-    } ~ path("health") {
+    path("health") {
       complete {
         HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>service is healthy</h1>")
 
@@ -162,7 +128,11 @@ trait SocialNetworkService extends JsonMarshallers{
         path("connections") {
           entity(as[RelationshipGraph]) { graph =>
             println(s"graph = $graph")
-            complete(graph)
+
+            val maybeItem = connections(graph)
+            onSuccess(maybeItem) {
+              case item : List[PersonConnections] => complete(item)
+            }
           }
         }
       } ~ post {

@@ -8,12 +8,10 @@ import akka.stream.ActorMaterializer
 import akka.testkit.{TestActorRef, TestKit}
 import com.typesafe.config.ConfigFactory
 import net.matlux.SocialNetworkServer
-import net.matlux.SocialNetworkServer.{Person, Relationship, RelationshipGraph}
+import net.matlux.SocialNetworkServer.{Person, PersonConnections, Relationship, RelationshipGraph}
 import org.scalatest.{Matchers, WordSpec, WordSpecLike}
-
 import spray.json.DefaultJsonProtocol._
 import spray.json.DefaultJsonProtocol.{jsonFormat1, jsonFormat3}
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 
 
@@ -53,14 +51,14 @@ class SocialNetworkServiceTest extends  WordSpec with Matchers with JsonMarshall
       }
 
     }
-    "test marshalling" in {
-      Post("/test-marshalling", HttpEntity(ContentTypes.`application/json`, fixtureJsonInput)) ~> routes ~> check {
-        responseAs[RelationshipGraph] shouldEqual fixtureRelationshipGraph
+    "test connection" in {
+      Post("/connections", HttpEntity(ContentTypes.`application/json`, fixtureJsonInput)) ~> routes ~> check {
+        responseAs[List[PersonConnections]] shouldEqual List(PersonConnections("Paul", 1, 2))
 
       }
     }
 
-    "test connection" in {
+    "test marshalling" in {
       Post("/test-marshalling", HttpEntity(ContentTypes.`application/json`, fixtureJsonInput)) ~> routes ~> check {
         responseAs[RelationshipGraph] shouldEqual fixtureRelationshipGraph
 
