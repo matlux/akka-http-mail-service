@@ -84,7 +84,7 @@
                                     <resource>reference.conf</resource>
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>net.matlux.HelloWorldServer</mainClass>
+                                    <mainClass>net.matlux.SocialNetworkServer</mainClass>
                                 </transformer>
                             </transformers>
                             <finalName>uber-${artifactId}-${version}</finalName>
@@ -110,7 +110,7 @@
                     <launchers>
                         <launcher>
                             <id>foo</id>
-                            <mainClass>net.matlux.HelloWorldServer</mainClass>
+                            <mainClass>net.matlux.SocialNetworkServer</mainClass>
                         </launcher>
                         <!-- you could define other launcher -->
                     </launchers>

@@ -17,13 +17,15 @@ import akka.stream.scaladsl.{Flow, Source}
 import akka.util.{ByteString, Timeout}
 import net.matlux.utils.Atom
 import spray.json.DefaultJsonProtocol._
+import akka.stream.scaladsl.{Sink, Source}
+import akka.http.scaladsl.unmarshalling.{Unmarshal, Unmarshaller}
 import spray.json._
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Credentials`, `Access-Control-Allow-Headers`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Origin`}
 
 import scala.concurrent.duration._
 import akka.pattern.ask
-import net.matlux.HelloWorldServer.{Bid, Bids, GetBids}
+import net.matlux.SocialNetworkServer._
 
 import scala.util.Random
 import Math._
@@ -33,35 +35,46 @@ import Math._
 
 }*/
 
-trait HelloWorldService {
+trait SocialNetworkService extends JsonMarshallers{
   implicit val system: ActorSystem
   implicit val executor = system.dispatcher
   implicit val materializer: ActorMaterializer
 
-  implicit val auction: ActorRef
 
 
-  // formats for unmarshalling and marshalling
-  implicit val itemFormat = jsonFormat2(Item)
-  implicit val orderFormat = jsonFormat1(Order)
 
+/*
 
-  // domain model
-  final case class Item(name: String, id: Long)
+ */
 
-  final case class Order(items: List[Item])
+  /*
+  {
+"sn": "facebook",
+"people": [{"name":"Jonh"},{"name":"Harry"},{"name":"Peter"}, {"name": "George"}, {"name": "Anna"}],
+"relationships": [
+    {"type": "HasConnection", "startNode": "John", "endNode": "Peter"},
+    {"type": "HasConnection", "startNode": "John", "endNode": "George"},
+    {"type": "HasConnection", "startNode": "Peter", "endNode": "George"},
+    {"type": "HasConnection", "startNode": "Peter", "endNode": "Anna"}
+]
+}
+   */
+  //Unmarshal(Source("{\"name\":\"Jonh\"}")).to[Person]
+//  Unmarshal("{\"name\":\"Jonh\"}").to[Person]
+//  personFormat.read(Source("{\"name\":\"Jonh\"}"))
 
   // (fake) async database query api
-  var db = Atom(Map[Long, Item](4L -> Item("Jose Gonzales CD", 4)))
+  var db = Atom(Map[String, Relationship]("John" -> Relationship("HasConnection", "John", "Peter")))
 
-  def fetchItem(itemId: Long): Future[Option[Item]] = Future {
-    db.deRef().get(itemId)
+  def fetchItem(itemId: Long): Future[Option[Relationship]] = Future {
+    //db.deRef().get(itemId)
+    Some(Relationship("HasConnection","John", "Peter"))
   }
 
-  def saveOrder(order: Order): Future[Done] = Future {
-    db.swap { currentDb: Map[Long, Item] =>
-      val newMap = order.items.foldLeft(Map[Long, Item]()) { (acc: Map[Long, Item], item: Item) =>
-        acc + (item.id -> item)
+  def saveOrder(order: RelationshipGraph): Future[Done] = Future {
+    db.swap { currentDb: Map[String, Relationship] =>
+      val newMap = order.relationships.foldLeft(Map[String, Relationship]()) { (acc: Map[String, Relationship], item: Relationship) =>
+        acc + (item.startNode -> item)
       }
       currentDb ++ newMap
     }
@@ -73,10 +86,6 @@ trait HelloWorldService {
   val numbers = Source.fromIterator(() =>
     Iterator.continually(Random.nextInt()))
 
-
-  // these are from spray-json
-  implicit val bidFormat = jsonFormat2(Bid)
-  implicit val bidsFormat = jsonFormat1(Bids)
 
 
   private val allowedCorsVerbs = List(
@@ -121,10 +130,9 @@ trait HelloWorldService {
         HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>result</h1>")
 
       }
-    } ~ path("kill") {
+    } ~ path("test") {
       complete {
-        System.exit(0)
-        HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>too late</h1>")
+        Some(Relationship("HasConnection","John", "Peter"))
       }
     } ~ path("health") {
       complete {
@@ -140,7 +148,9 @@ trait HelloWorldService {
       get {
         pathPrefix("item" / LongNumber) { id =>
           // there might be no item for a given id
-          val maybeItem: Future[Option[Item]] = fetchItem(id)
+          val maybeItem: Future[Option[Relationship]] = Future {
+            Some(Relationship("HasConnection","John", "Peter"))
+          }
 
           onSuccess(maybeItem) {
             case Some(item) => complete(item)
@@ -149,42 +159,21 @@ trait HelloWorldService {
         }
       } ~
       post {
-        path("create-order") {
-          entity(as[Order]) { order =>
-            val saved: Future[Done] = saveOrder(order)
-            onComplete(saved) { done =>
-              complete("order created")
+        path("connections") {
+          entity(as[RelationshipGraph]) { graph =>
+            println(s"graph = $graph")
+            complete(graph)
+          }
+        }
+      } ~ post {
+          path("test-marshalling") {
+            entity(as[RelationshipGraph]) { graph =>
+              println(s"graph = $graph")
+              complete(graph)
             }
           }
         }
-      } ~
-      path("random") {
-        get {
-          complete(
-            HttpEntity(
-              ContentTypes.`text/plain(UTF-8)`,
-              // transform each number to a chunk of bytes
-              numbers.map(n => ByteString(s"$n\n"))
-            )
-          )
-        }
-      } ~
-      path("auction") {
-        put {
-          parameter("bid".as[Int], "user") { (bid, user) =>
-            // place a bid, fire-and-forget
-            auction ! Bid(user, bid)
-            complete((StatusCodes.Accepted, "bid placed"))
-          }
-        } ~
-          get {
-            implicit val timeout: Timeout = 5.seconds
 
-            // query the actor for the current auction state
-            val bids: Future[Bids] = (auction ? GetBids).mapTo[Bids]
-            complete(bids)
-          }
-      }
   }
 
 
