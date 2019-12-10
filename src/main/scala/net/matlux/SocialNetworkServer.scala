@@ -23,13 +23,6 @@ class SocialNetworkServer(val config: Config,
 object SocialNetworkServer {
 
 
-  // domain model
-  final case class Relationship(`type`: String, startNode: String, endNode: String)
-  final case class Person(name: String)
-  final case class RelationshipGraph(sn: String, people: List[Person], relationships: List[Relationship])
-  final case class PersonConnections(name: String, degree1 : Int, degree2 : Int)
-
-
 
   def main(args: Array[String]): Unit = {
 
@@ -42,8 +35,6 @@ object SocialNetworkServer {
 
 
     new SocialNetworkServer(config,system,materializer)
-
-    //println(Order(List(Item("Jose Gonzales2 CD", 5))).toJson)
   }
 
 }

@@ -30,6 +30,8 @@ import net.matlux.SocialNetworkServer._
 import scala.util.Random
 import Math._
 
+import net.matlux.SocialNetworkDomain.{PersonConnections, Relationship, RelationshipGraph,extractDeg1AndDeg2Numbers}
+
 /*trait EnableCORSDirectives extends RespondWithDirectives {
 
 
@@ -129,10 +131,9 @@ trait SocialNetworkService extends JsonMarshallers{
           entity(as[RelationshipGraph]) { graph =>
             println(s"graph = $graph")
 
-            val maybeItem = connections(graph)
-            onSuccess(maybeItem) {
-              case item : List[PersonConnections] => complete(item)
-            }
+            val item = extractDeg1AndDeg2Numbers(graph)
+            complete(item)
+
           }
         }
       } ~ post {
