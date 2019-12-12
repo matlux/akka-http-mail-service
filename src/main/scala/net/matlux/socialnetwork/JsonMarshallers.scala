@@ -1,6 +1,6 @@
-package net.matlux
+package net.matlux.socialnetwork
 
-import net.matlux.SocialNetworkDomain.{Person, PersonConnections, Relationship, RelationshipGraph}
+import net.matlux.socialnetwork.SocialNetworkDomain._
 import spray.json.DefaultJsonProtocol
 
 trait JsonMarshallers extends DefaultJsonProtocol {

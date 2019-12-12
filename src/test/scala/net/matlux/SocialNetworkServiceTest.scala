@@ -7,12 +7,12 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.stream.ActorMaterializer
 import akka.testkit.{TestActorRef, TestKit}
 import com.typesafe.config.ConfigFactory
-import net.matlux.SocialNetworkServer
 import org.scalatest.{Matchers, WordSpec, WordSpecLike}
 import spray.json.DefaultJsonProtocol._
 import spray.json.DefaultJsonProtocol.{jsonFormat1, jsonFormat3}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
-import net.matlux.SocialNetworkDomain._
+import net.matlux.socialnetwork.SocialNetworkDomain._
+import net.matlux.socialnetwork.{JsonMarshallers, SocialNetworkServer}
 
 
 class SocialNetworkServiceTest extends  WordSpec with Matchers with JsonMarshallers with ScalatestRouteTest {
@@ -60,7 +60,31 @@ class SocialNetworkServiceTest extends  WordSpec with Matchers with JsonMarshall
 
     }
 
+    "test scratchpad" in {
 
+      extractRelationships(fixtureRelationshipGraph,"John")
+
+      allThePeople(fixtureRelationshipGraph).map{p =>
+        val relationshipsDeg1 = extractRelationships(fixtureRelationshipGraph,p)
+        (p,relationshipsDeg1,relationshipsDeg1.flatMap(extractRelationships(fixtureRelationshipGraph,_)).filter(_ != p).diff(relationshipsDeg1))}.
+        map{case (name,relDeg1,relDeg2) => (name, relDeg1, relDeg2)}
+
+      extractDeg1AndDeg2(fixtureRelationshipGraph)
+      extractDeg1AndDeg2Numbers(fixtureRelationshipGraph)
+
+      for {
+        people <- allThePeople(fixtureRelationshipGraph)
+        relationshipsDeg1 <- extractRelationships(fixtureRelationshipGraph,people)
+        relationshipsDeg2 <- extractRelationships(fixtureRelationshipGraph,relationshipsDeg1)
+
+        if (people != relationshipsDeg2 && !extractRelationships(fixtureRelationshipGraph,relationshipsDeg1).contains(relationshipsDeg1))
+      } yield (people,(extractRelationships(fixtureRelationshipGraph,relationshipsDeg1).contains(relationshipsDeg1)))
+      peopleWithoutRelationships(fixtureRelationshipGraph)
+
+      peopleWithRelationships(fixtureRelationshipGraph)
+      extractRelationships(fixtureRelationshipGraph,"ohn")
+
+    }
   }
 
 

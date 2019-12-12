@@ -1,4 +1,4 @@
-package net.matlux
+package net.matlux.socialnetwork
 
 object SocialNetworkDomain {
 
@@ -41,7 +41,7 @@ object SocialNetworkDomain {
       (p,relationshipsDeg1,relationshipsDeg1.flatMap(extractRelationships(relationshipGraph,_)).filter(_ != p).diff(relationshipsDeg1))}
   }
 
-  def extractDeg1AndDeg2Numbers(relationshipGraph : RelationshipGraph) ={
+  def extractDeg1AndDeg2Numbers(relationshipGraph : RelationshipGraph) : Set[PersonConnections] ={
     extractDeg1AndDeg2(relationshipGraph).
       map{case (name,relDeg1,relDeg2) => PersonConnections(name, relDeg1.size, relDeg2.size)}
   }

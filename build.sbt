@@ -7,7 +7,7 @@ scalaVersion := "2.12.8"
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 assemblyJarName in assembly := "akka-http-social-network.jar"
 
-mainClass in Compile := Some("net.matlux.SocialNetworkServer")
+mainClass in Compile := Some("net.matlux.SocialNetwork.SocialNetworkServer")
 
 libraryDependencies ++= {
   val akkaStreamVersion = "2.5.4"
@@ -27,7 +27,8 @@ libraryDependencies ++= {
     "org.jolokia" % "jolokia-jvm" % "1.3.7" classifier "agent",
 
     "org.scalatest" %% "scalatest" % scalaTestV % Test,
-    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test,
+    "org.specs2" %% "specs2-core" % "4.6.0" % Test
 
   )
 }
