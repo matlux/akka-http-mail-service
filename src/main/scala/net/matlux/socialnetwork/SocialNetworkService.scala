@@ -13,7 +13,6 @@ import net.matlux.utils.Atom
 import scala.concurrent.Future
 import scala.util.Random
 import spray.json.DefaultJsonProtocol._
-
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
@@ -25,38 +24,14 @@ import com.typesafe.config.{Config, ConfigFactory}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.stream.scaladsl.{Sink, Source}
+import net.matlux.thirdparty.ThirdPartyService
 
 
-trait SocialNetworkService extends JsonMarshallers{
+trait SocialNetworkService extends JsonMarshallers with ThirdPartyService{
   implicit val system: ActorSystem
   implicit val executor = system.dispatcher
   implicit val materializer: ActorMaterializer
 
-/*
-
- */
-
-  /*
-  {
-"sn": "facebook",
-"people": [{"name":"Jonh"},{"name":"Harry"},{"name":"Peter"}, {"name": "George"}, {"name": "Anna"}],
-"relationships": [
-    {"type": "HasConnection", "startNode": "John", "endNode": "Peter"},
-    {"type": "HasConnection", "startNode": "John", "endNode": "George"},
-    {"type": "HasConnection", "startNode": "Peter", "endNode": "George"},
-    {"type": "HasConnection", "startNode": "Peter", "endNode": "Anna"}
-]
-}
-   */
-
-  def connections(graph: RelationshipGraph): Future[List[PersonConnections]] = Future {
-    List(PersonConnections("Paul", 1, 2))
-  }
-
-  // streams are re-usable so we can define it here
-  // and use it for every request
-  val numbers = Source.fromIterator(() =>
-    Iterator.continually(Random.nextInt()))
 
 
 
@@ -85,12 +60,11 @@ trait SocialNetworkService extends JsonMarshallers{
       }
     } ~
       post {
-        path("connections") {
+        path("graph-connections") {
           entity(as[RelationshipGraph]) { graph =>
-            println(s"graph = $graph")
 
-            val item = extractDeg1AndDeg2Numbers(graph)
-            complete(item)
+            val personCon = extractDeg1AndDeg2Numbers(graph)
+            complete(personCon)
 
           }
         }
@@ -101,10 +75,44 @@ trait SocialNetworkService extends JsonMarshallers{
               complete(graph)
             }
           }
+      } ~ get {
+        path("not-connected-people") {
+          import cats.effect.IO
+
+          val input = IO.fromFuture(IO{getSocialNetwork("facebook")})
+
+          val program: IO[RelationshipGraph] = for {
+            in <- input
+          } yield (in)
+          val graph = program.unsafeRunSync()
+
+          val nb = countNumberOfPeopleWithoutConnection(graph)
+          complete(nb.toString)
+
         }
+      } ~ get {
+      path("degree-of-connection" / Remaining) { name =>
+
+          import cats.effect.IO
+
+        val facebookGraphMonad = IO.fromFuture(IO{getSocialNetwork("facebook")})
+        val twitterGraphMonad = IO.fromFuture(IO{getSocialNetwork("twitter")})
+
+          val getFacebookGraph: IO[(RelationshipGraph,RelationshipGraph)] = for {
+            facebook <- facebookGraphMonad
+            twitter <- twitterGraphMonad
+          } yield ((facebook,twitter))
+          val (facebookGraph,twitterGraph) = getFacebookGraph.unsafeRunSync()
+
+          val item = degreeOfConnection(name,merge(facebookGraph,twitterGraph))
+          complete(item)
+
+      }
+    }
 
   }
 
 
 
 }
+

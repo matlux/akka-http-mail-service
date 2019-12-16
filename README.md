@@ -73,31 +73,16 @@ Build the application:
 sbt universal:stage
 ```
 
-Run the application tha was built:
+Run the application that was built:
 
 ```bash
-target/universal/stage/bin/akka-http-hello-world
+target/universal/stage/bin/akka-http-social-network
 ```
 
 ### Launch the server directly from SBT
 
 ```bash
 sbt run
-```
-
-## Maven mode
-
-### Launch the server directly from Maven
-
-```bash
-mvn -s [path_to_settings.xml] scala run
-```
-
-### Create and run Uber jar server artifact
-
-```bash
-mvn clean package
-java -jar target/uber-akka-http-hello-world-1.0.2-SNAPSHOT.jar
 ```
 
 ## test the service with curl on localhost
@@ -118,7 +103,7 @@ Launch image
 
 ```bash
 docker images
-docker run -it -p 8080:8080 akkahttphelloworld_webservice
+docker run -it -p 8080:8080 akkahttpsocialnetwork_webservice
 ```
 
 

@@ -3,8 +3,13 @@ package net.matlux.socialnetwork
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.server.RouteConcatenation
+import akka.http.scaladsl.server.directives.DebuggingDirectives
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
+import net.matlux.rest.{WebServer, WebServerConfig}
+
+import scala.concurrent.Future
 
 class SocialNetworkServer(val config: Config,
                           implicit val system : ActorSystem,
@@ -14,27 +19,14 @@ class SocialNetworkServer(val config: Config,
   //val auction = auction1
   //println("config="+config.getString("http.address")+config.getString("http.port"))
   println("routes="+routes)
-  Http().bindAndHandle(routes, config.getString("http.address"), config.getInt("http.port"))
+//  Http().bindAndHandle(routes, config.getString("http.address"), config.getInt("http.port"))
 
+  val server = new WebServer(WebServerConfig(8080, "0.0.0.0"),routes)
+
+  def close(): Future[Unit] = server.close()
+  def started: Future[Unit] = server.started
 }
 
 
 
-object SocialNetworkServer {
 
-
-
-  def main(args: Array[String]): Unit = {
-
-    implicit val system = ActorSystem("my-system")
-    implicit val executor = system.dispatcher
-    implicit val materializer = ActorMaterializer()
-
-    val config = ConfigFactory.load()
-    val logger = Logging(system, getClass)
-
-
-    new SocialNetworkServer(config,system,materializer)
-  }
-
-}

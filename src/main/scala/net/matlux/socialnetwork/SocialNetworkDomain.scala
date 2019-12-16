@@ -1,5 +1,7 @@
 package net.matlux.socialnetwork
 
+import scala.collection.Set
+
 object SocialNetworkDomain {
 
 
@@ -41,10 +43,30 @@ object SocialNetworkDomain {
       (p,relationshipsDeg1,relationshipsDeg1.flatMap(extractRelationships(relationshipGraph,_)).filter(_ != p).diff(relationshipsDeg1))}
   }
 
+  def degreeOfConnection(name: String, relationshipGraph : RelationshipGraph) : Option[PersonConnections]   ={
+    val connectionses: Set[PersonConnections] = extractDeg1AndDeg2(relationshipGraph).
+      filter { case (nameInternal, relDeg1, relDeg2) => nameInternal == name }.
+      map { case (name, relDeg1, relDeg2) => PersonConnections(name, relDeg1.size, relDeg2.size) }
+    connectionses.toList match {
+      case List(person) => Some(person)
+      case Nil => None
+    }
+  }
+
   def extractDeg1AndDeg2Numbers(relationshipGraph : RelationshipGraph) : Set[PersonConnections] ={
     extractDeg1AndDeg2(relationshipGraph).
       map{case (name,relDeg1,relDeg2) => PersonConnections(name, relDeg1.size, relDeg2.size)}
   }
 
+
+  def countNumberOfPeopleWithoutConnection(relationshipGraph : RelationshipGraph) : Int ={
+    peopleWithoutRelationships(relationshipGraph).size
+  }
+
+  def merge(rel1 : RelationshipGraph,rel2 : RelationshipGraph) = {
+    new RelationshipGraph("merged",
+      (rel1.people.toSet ++ rel2.people.toSet).toList,
+      (rel1.relationships.toSet ++ rel2.relationships.toSet).toList)
+  }
 
 }
