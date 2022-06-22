@@ -11,6 +11,8 @@ trait JsonMarshallers extends DefaultJsonProtocol {
   implicit val mailCreatedFormat = jsonFormat6(Mail)
   implicit val errorMsgFormat = jsonFormat1(ErrorMsg)
   implicit val messageFormat = jsonFormat4(Message)
+  implicit val mailInfoFormat = jsonFormat5(MailMetaData)
+  implicit val pagedMailsInfoFormat = jsonFormat5(PagedMailsInfo)
 
 
 

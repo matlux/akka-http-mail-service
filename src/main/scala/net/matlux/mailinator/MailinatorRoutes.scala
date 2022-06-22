@@ -27,7 +27,7 @@ import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.stream.scaladsl.{Sink, Source}
 import akka.util.Timeout
-import net.matlux.mailinator.mailboxService.MailRouter.{CreateMailbox, GetEmailByIndex, MailNotFound, MailboxNotFound, PostEmail}
+import net.matlux.mailinator.mailboxService.MailRouter.{CreateMailbox, GetEmailByIndex, GetEmailByPage, MailNotFound, MailboxNotFound, PostEmail}
 
 import scala.concurrent.duration._
 import java.util.UUID
@@ -37,7 +37,7 @@ object MailinatorRoutes extends JsonMarshallers{
 //  implicit val system: ActorSystem
 //  implicit val executor = system.dispatcher
 //  implicit val materializer: ActorMaterializer
-
+  final val DefaultPageSize = 10
 
   implicit val timeout: Timeout            = Timeout(2.seconds)
 
@@ -92,8 +92,12 @@ object MailinatorRoutes extends JsonMarshallers{
                     }
                   } ~
                     get {
-                      complete("ok get gfgfg messages " + emailAddress)
-//                      mailRouter
+                      parameter('page ? 1, 'size ? DefaultPageSize) { (page, size) =>
+                        onSuccess(mailRouter ? GetEmailByPage(emailAddress, page, size)) {
+                          case mails: PagedMailsInfo => complete((StatusCodes.OK, mails))
+                          case MailboxNotFound   => complete(StatusCodes.NotFound, ErrorMsg("MailboxNotFoundMessage"))
+                        }
+                      }
                     }
                 } ~
                   pathPrefix(IntNumber) { messageId =>

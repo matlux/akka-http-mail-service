@@ -3,7 +3,7 @@ package net.matlux.mailinator.mailboxService
 import akka.actor.{Actor, ActorRef, Props}
 import akka.event.Logging
 import net.matlux.mailinator.MailinatorDomain.{EmailAddress, MailboxCreated, Message}
-import net.matlux.mailinator.mailboxService.MailRouter.{CreateMailbox, GetEmailByIndex, MailboxNotFound, Mailboxes, PostEmail}
+import net.matlux.mailinator.mailboxService.MailRouter.{CreateMailbox, GetEmailByIndex, GetEmailByPage, MailboxNotFound, Mailboxes, PostEmail}
 
 import java.util.UUID
 
@@ -50,6 +50,14 @@ class MailRouter extends Actor {
 
 
     case msg @ GetEmailByIndex(emailAddress, _) =>
+      mailStorage.get(emailAddress) match {
+        case Some(mailbox) =>
+          mailbox ! (sender(), msg)
+        case None =>
+          sender() ! MailboxNotFound
+      }
+
+    case msg @ GetEmailByPage(emailAddress, _, _) =>
       mailStorage.get(emailAddress) match {
         case Some(mailbox) =>
           mailbox ! (sender(), msg)

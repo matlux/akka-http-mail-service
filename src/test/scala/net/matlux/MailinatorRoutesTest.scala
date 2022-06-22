@@ -110,6 +110,11 @@ class MailinatorRoutesTest extends  WordSpec with Matchers with JsonMarshallers 
             mail.content  shouldEqual "blabla"
           }
 
+          Get("/mailboxes/" + value.emailAddress + "/messages?page=1&size=30") ~> routes ~> check {
+            val mailsInfo = responseAs[PagedMailsInfo]
+            mailsInfo.mails.size  shouldEqual 1
+          }
+
         }
       }
 

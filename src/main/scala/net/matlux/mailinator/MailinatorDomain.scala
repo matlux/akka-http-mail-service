@@ -13,12 +13,12 @@ object MailinatorDomain {
   final case class MailboxCreated(emailAddress: String)
   final case class Message(from: String, to: String, subject: String, content : String)
   final case class Mail(id :Int, datetime : Long, from: String, to: String, subject: String, content : String)
-  final case class MailMetaData(id :Int, datetime : Instant, from: String, to: String, subject: String)
-  final case class PagedMessage(page: Int,
-                                nextPage: Option[Int],
-                                numberOfPages : Int,
-                                numberOfMails : Int,
-                                mails : Vector[MailMetaData])
+  final case class MailMetaData(id :Int, datetime : Long, from: String, to: String, subject: String)
+  final case class PagedMailsInfo(page: Int,
+                                  nextPage: Option[Int],
+                                  numberOfPages : Int,
+                                  numberOfMails : Int,
+                                  mails : Vector[MailMetaData])
 
   // error messages
   final case class ErrorMsg(message: String)
