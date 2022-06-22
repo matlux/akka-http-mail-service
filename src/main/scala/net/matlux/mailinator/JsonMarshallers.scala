@@ -7,11 +7,11 @@ trait JsonMarshallers extends DefaultJsonProtocol {
 
 
   // formats for unmarshalling and marshalling
-  implicit val relationshipFormat = jsonFormat1(MailboxCreated)
+  implicit val mailboxCreatedFormat = jsonFormat1(MailboxCreated)
+  implicit val mailCreatedFormat = jsonFormat6(Mail)
+  implicit val errorMsgFormat = jsonFormat1(ErrorMsg)
+  implicit val messageFormat = jsonFormat4(Message)
 
-//  implicit val relationshipFormat = jsonFormat3(Relationship)
-//  implicit val personFormat = jsonFormat1(Person)
-//  implicit val relationshipGraphFormat = jsonFormat3(RelationshipGraph)
-//  implicit val personConnections = jsonFormat3(PersonConnections)
+
 
 }

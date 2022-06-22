@@ -16,20 +16,13 @@ import fs2.Stream
 import net.matlux.mailinator.MailinatorDomain._
 import net.matlux.mailinator.{JsonMarshallers, MailinatorServer}
 
+import scala.collection.immutable.SortedMap
+
 
 class MailinatorRoutesTest extends  WordSpec with Matchers with JsonMarshallers with ScalatestRouteTest {
 
 
-  val fixtureJsonInput = """{
-      "sn": "facebook",
-      "people": [{"name":"John"},{"name":"Harry"},{"name":"Peter"}, {"name": "George"}, {"name": "Anna"}],
-      "relationships": [
-                      {"type": "HasConnection", "startNode": "John", "endNode": "Peter"},
-                      {"type": "HasConnection", "startNode": "John", "endNode": "George"},
-                      {"type": "HasConnection", "startNode": "Peter", "endNode": "George"},
-                      {"type": "HasConnection", "startNode": "Peter", "endNode": "Anna"}
-                  ]
-                  }"""
+  val fixtureEmailJsonInput = """{"from":"a@f","to":"b@f","subject":"topic","content":"blabla"}"""
 
 
 
@@ -58,111 +51,163 @@ class MailinatorRoutesTest extends  WordSpec with Matchers with JsonMarshallers 
     val config = ConfigFactory.load()
     val routes = new MailinatorServer(config,system,materializer).routes
 
+    "As a user, I want to check the health of this service (through Rest)" in {
+      Get("/health") ~> routes ~> check {
+        responseAs[String] shouldEqual "<h1>service is healthy</h1>"
 
-    "test random graph degree of connections through Rest" in {
-      Post("/graph-connections", HttpEntity(ContentTypes.`application/json`, fixtureJsonInput)) ~> routes ~> check {
-        responseAs[List[PersonConnections]].toSet shouldEqual fixturePersonConnections
+      }
+    }
+    "As a user, I want to Create a new, random email address. (through Rest)" in {
+      Post("/mailboxes") ~> routes ~> check {
+        val value = responseAs[MailboxCreated]
+        println("value.emailAddress=" + value.emailAddress)
+        value.emailAddress should endWith ("@test.com")
 
       }
     }
 
-    "test marshalling through Rest" in {
-      Post("/test-marshalling", HttpEntity(ContentTypes.`application/json`, fixtureJsonInput)) ~> routes ~> check {
-        responseAs[RelationshipGraph] shouldEqual fixtureRelationshipGraph
+    "As a user, I want to errors to be handled when MailboxNotFoundMessage." in {
+
+
+      Get("/mailboxes/random@address/messages/1") ~> routes ~> check {
+        responseAs[ErrorMsg] shouldEqual ErrorMsg("MailboxNotFoundMessage")
 
       }
-    }
 
-    "test extractDeg1AndDeg2Numbers function" in {
-      extractDeg1AndDeg2Numbers(fixtureRelationshipGraph) shouldEqual fixturePersonConnections
 
     }
 
-    "test merge" in {
-      merge(fixtureFacebookRelationshipGraph,fixtureTwitterRelationshipGraph) shouldEqual fixtureRelationshipMergedGraph
+    "As a user, I want to errors to be handled when MailNotFoundMessage." in {
 
-    }
+      Post("/mailboxes") ~> routes ~> check {
+        val value = responseAs[MailboxCreated]
+        println("value.emailAddress=" + value.emailAddress)
+        value.emailAddress should endWith ("@test.com")
 
-    /*
-    As a user, I want to query how many people are not connected to anyone for the given social network so I know who to propose new connections to.
 
-    Given a social network name Facebook
-    And a full Facebook graph
-    Return count of people with no connections
-     */
-    "As a user, I want to Return count of people with no connections" in {
-      countNumberOfPeopleWithoutConnection(fixtureRelationshipGraph) shouldEqual 1
+        Get("/mailboxes/" + value.emailAddress + "/messages/1") ~> routes ~> check {
+          responseAs[ErrorMsg] shouldEqual ErrorMsg("MailNotFoundMessage")
 
-    }
-    "As a user, I want to Return count of people with no connections (through Rest)" in {
-      Get("/not-connected-people") ~> routes ~> check {
-        responseAs[String] shouldEqual "1"
-
+        }
       }
-    }
-
-    /*
-    As a user, I want to query how many people are connected to a given person by 1 or 2 degrees of separation for all social networks (facebook and twitter) so I understand her/his social influence.
-
-    Given a person name Peter
-    And a Facebook graph for Peter
-    And a Twitter graph for Peter
-    Return count of connections of 1 degree + count of connections of 2 degree
-    */
-    "As a user, I want to Return count of connections of 1 degree + count of connections of 2 degree for Peter" in {
-      degreeOfConnection("Peter",
-        merge(fixtureFacebookRelationshipGraph,fixtureTwitterRelationshipGraph)) shouldEqual
-        Some(PersonConnections("Peter",3,0))
 
     }
-    "As a user, I want to Return count of connections of 1 degree + count of connections of 2 degree for Peter (through Rest)" in {
-      Get("/degree-of-connection/Peter") ~> routes ~> check {
-        responseAs[PersonConnections] shouldEqual PersonConnections("Peter",3,0)
+
+    "As a user, I want to post and retreive an email." in {
+
+      Post("/mailboxes") ~> routes ~> check {
+        val value = responseAs[MailboxCreated]
+        println("value.emailAddress=" + value.emailAddress)
+        value.emailAddress should endWith ("@test.com")
+
+        Post("/mailboxes/" + value.emailAddress + "/messages", HttpEntity(ContentTypes.`application/json`, fixtureEmailJsonInput)) ~> routes ~> check {
+          val mail = responseAs[Mail]
+          mail.content  shouldEqual "blabla"
+
+
+          Get("/mailboxes/" + value.emailAddress + "/messages/1") ~> routes ~> check {
+            val mail = responseAs[Mail]
+            mail.content  shouldEqual "blabla"
+          }
+
+        }
       }
-    }
-
-
-    //unhappy paths
-    "As a user, I want to Return None in case the user does not exist" in {
-      degreeOfConnection("Name_do_not_exists",
-        merge(fixtureFacebookRelationshipGraph,fixtureTwitterRelationshipGraph)) shouldEqual
-        None
 
     }
-    "As a user, I want to Return None in case the user does not exist (through Rest)" in {
-      Get("/degree-of-connection/Name_do_not_exists") ~> routes ~> check {
-        responseAs[PersonConnections] shouldEqual None
+
+    "As a user, I want to Retrieve an index of messages sent to an email address, including sender, subject, " +
+      "and id, in recency order. Support cursor-based pagination through the index." in {
+
+      Post("/mailboxes") ~> routes ~> check {
+        val value = responseAs[MailboxCreated]
+        println("value.emailAddress=" + value.emailAddress)
+        value.emailAddress should endWith ("@test.com")
+        Get("/mailboxes/" + value.emailAddress + "/messages/1") ~> routes ~> check {
+          responseAs[ErrorMsg] shouldEqual ErrorMsg("MailNotFoundMessage")
+
+        }
       }
+
     }
 
-
+//    "test random graph degree of connections through Rest" in {
+//      Post("/graph-connections", HttpEntity(ContentTypes.`application/json`, fixtureJsonInput)) ~> routes ~> check {
+//        responseAs[List[PersonConnections]].toSet shouldEqual fixturePersonConnections
+//
+//      }
+//    }
+//
+//    "test marshalling through Rest" in {
+//      Post("/test-marshalling", HttpEntity(ContentTypes.`application/json`, fixtureJsonInput)) ~> routes ~> check {
+//        responseAs[RelationshipGraph] shouldEqual fixtureRelationshipGraph
+//
+//      }
+//    }
+//
+//    "test extractDeg1AndDeg2Numbers function" in {
+//      extractDeg1AndDeg2Numbers(fixtureRelationshipGraph) shouldEqual fixturePersonConnections
+//
+//    }
+//
+//    "test merge" in {
+//      merge(fixtureFacebookRelationshipGraph,fixtureTwitterRelationshipGraph) shouldEqual fixtureRelationshipMergedGraph
+//
+//    }
+//
+//    /*
+//    As a user, I want to query how many people are not connected to anyone for the given social network so I know who to propose new connections to.
+//
+//    Given a social network name Facebook
+//    And a full Facebook graph
+//    Return count of people with no connections
+//     */
+//    "As a user, I want to Return count of people with no connections" in {
+//      countNumberOfPeopleWithoutConnection(fixtureRelationshipGraph) shouldEqual 1
+//
+//    }
+//    "As a user, I want to Return count of people with no connections (through Rest)" in {
+//      Get("/not-connected-people") ~> routes ~> check {
+//        responseAs[String] shouldEqual "1"
+//
+//      }
+//    }
+//
+//    /*
+//    As a user, I want to query how many people are connected to a given person by 1 or 2 degrees of separation for all social networks (facebook and twitter) so I understand her/his social influence.
+//
+//    Given a person name Peter
+//    And a Facebook graph for Peter
+//    And a Twitter graph for Peter
+//    Return count of connections of 1 degree + count of connections of 2 degree
+//    */
+//    "As a user, I want to Return count of connections of 1 degree + count of connections of 2 degree for Peter" in {
+//      degreeOfConnection("Peter",
+//        merge(fixtureFacebookRelationshipGraph,fixtureTwitterRelationshipGraph)) shouldEqual
+//        Some(PersonConnections("Peter",3,0))
+//
+//    }
+//    "As a user, I want to Return count of connections of 1 degree + count of connections of 2 degree for Peter (through Rest)" in {
+//      Get("/degree-of-connection/Peter") ~> routes ~> check {
+//        responseAs[PersonConnections] shouldEqual PersonConnections("Peter",3,0)
+//      }
+//    }
+//
+//
+//    //unhappy paths
+//    "As a user, I want to Return None in case the user does not exist" in {
+//      degreeOfConnection("Name_do_not_exists",
+//        merge(fixtureFacebookRelationshipGraph,fixtureTwitterRelationshipGraph)) shouldEqual
+//        None
+//
+//    }
+//    "As a user, I want to Return None in case the user does not exist (through Rest)" in {
+//      Get("/degree-of-connection/Name_do_not_exists") ~> routes ~> check {
+//        responseAs[PersonConnections] shouldEqual None
+//      }
+//    }
+//
+//
     "test scratchpad" in {
-
-
-
-      extractRelationships(fixtureRelationshipGraph,"John")
-
-      allThePeople(fixtureRelationshipGraph).map{p =>
-        val relationshipsDeg1 = extractRelationships(fixtureRelationshipGraph,p)
-        (p,relationshipsDeg1,relationshipsDeg1.flatMap(extractRelationships(fixtureRelationshipGraph,_)).filter(_ != p).diff(relationshipsDeg1))}.
-        map{case (name,relDeg1,relDeg2) => (name, relDeg1, relDeg2)}
-
-      extractDeg1AndDeg2(fixtureRelationshipGraph)
-      extractDeg1AndDeg2Numbers(fixtureRelationshipGraph)
-
-      for {
-        people <- allThePeople(fixtureRelationshipGraph)
-        relationshipsDeg1 <- extractRelationships(fixtureRelationshipGraph,people)
-        relationshipsDeg2 <- extractRelationships(fixtureRelationshipGraph,relationshipsDeg1)
-
-        if (people != relationshipsDeg2 && !extractRelationships(fixtureRelationshipGraph,relationshipsDeg1).contains(relationshipsDeg1))
-      } yield (people,(extractRelationships(fixtureRelationshipGraph,relationshipsDeg1).contains(relationshipsDeg1)))
-      peopleWithoutRelationships(fixtureRelationshipGraph)
-
-      peopleWithRelationships(fixtureRelationshipGraph)
-      extractRelationships(fixtureRelationshipGraph,"ohn")
-
-
 
       import cats.effect.IO
       import fs2.Stream
@@ -193,6 +238,12 @@ class MailinatorRoutesTest extends  WordSpec with Matchers with JsonMarshallers 
       import cats.Monad
       import cats.effect.Sync
 //      Stream.eval(bytes).map(_.toList).compile.toVector.unsafeRunSync()
+
+      var mails = SortedMap.empty[Int,Message]
+      mails.lastKey
+      mails = mails + (1 -> Message("a@f","b@f","topic","blabla"))
+      if (mails.isEmpty) 1 else mails.lastKey + 1
+//      res3 == false
     }
   }
 

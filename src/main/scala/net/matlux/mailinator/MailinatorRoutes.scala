@@ -26,8 +26,10 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.stream.scaladsl.{Sink, Source}
-import net.matlux.mailinator.mailboxService.MailRouter.CreateMailbox
+import akka.util.Timeout
+import net.matlux.mailinator.mailboxService.MailRouter.{CreateMailbox, GetEmailByIndex, MailNotFound, MailboxNotFound, PostEmail}
 
+import scala.concurrent.duration._
 import java.util.UUID
 
 
@@ -37,6 +39,7 @@ object MailinatorRoutes extends JsonMarshallers{
 //  implicit val materializer: ActorMaterializer
 
 
+  implicit val timeout: Timeout            = Timeout(2.seconds)
 
 
   private val allowedCorsVerbs = List(
@@ -72,7 +75,48 @@ object MailinatorRoutes extends JsonMarshallers{
               mailRouter ! CreateMailbox(emailAddress)
               complete((StatusCodes.Created, MailboxCreated(emailAddress)))
             }
-          }
+          } ~
+            pathPrefix(Segment) { emailAddress =>
+              pathPrefix("messages") {
+                pathEnd {
+                  post {
+                    entity(as[Message]) { newMail =>
+                      onSuccess(mailRouter ? PostEmail(emailAddress, newMail)) {
+                        case persistedMail: Mail =>
+                          log.info("CREATED Mail by id: {} for Mailbox: {}",
+                            persistedMail.id,
+                            emailAddress)
+                          complete((StatusCodes.Created, persistedMail))
+                        case MailboxNotFound => complete(StatusCodes.NotFound, ErrorMsg("MailboxNotFoundMessage"))
+                      }
+                    }
+                  } ~
+                    get {
+                      complete("ok get gfgfg messages " + emailAddress)
+//                      mailRouter
+                    }
+                } ~
+                  pathPrefix(IntNumber) { messageId =>
+                    pathEnd {
+
+                        get {
+                          //complete("ok get messageId" + messageId)
+                          onSuccess(mailRouter ? GetEmailByIndex(emailAddress, messageId)) {
+                            case mail: Mail      => complete((StatusCodes.OK, mail))
+                            case MailboxNotFound => complete(StatusCodes.NotFound, ErrorMsg("MailboxNotFoundMessage"))
+                            case MailNotFound    => complete(StatusCodes.NotFound, ErrorMsg("MailNotFoundMessage"))
+                          }
+                        } ~
+                          delete {
+                            complete("ok delete messageId " + messageId)
+                          }
+                    }
+                  }
+              } ~
+                pathEnd {
+                  complete("ok delete emailAddress " + emailAddress)
+                }
+            }
         }
       }
 
