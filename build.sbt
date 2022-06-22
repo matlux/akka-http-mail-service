@@ -1,13 +1,13 @@
 enablePlugins(JavaAppPackaging)
 
-name := "akka-http-social-network"
+name := "akka-http-mailinator"
 organization := "matlux.net"
 version := "0.1"
 scalaVersion := "2.12.8"
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 assemblyJarName in assembly := "akka-http-social-network.jar"
 
-mainClass in Compile := Some("net.matlux.socialnetwork.Main")
+mainClass in Compile := Some("net.matlux.mailinator.Main")
 // if your project uses multiple Scala versions, use this for cross building
 addCompilerPlugin("org.typelevel" % "kind-projector" % "0.11.0" cross CrossVersion.full)
 

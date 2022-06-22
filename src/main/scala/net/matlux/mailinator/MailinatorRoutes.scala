@@ -1,4 +1,4 @@
-package net.matlux.socialnetwork
+package net.matlux.mailinator
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpMethods._
@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
-import net.matlux.socialnetwork.SocialNetworkDomain._
+import net.matlux.mailinator.MailinatorDomain._
 import net.matlux.utils.Atom
 
 import scala.concurrent.Future
@@ -27,7 +27,7 @@ import akka.stream.scaladsl.{Sink, Source}
 import net.matlux.thirdparty.ThirdPartyService
 
 
-trait SocialNetworkService extends JsonMarshallers with ThirdPartyService{
+trait MailinatorRoutes extends JsonMarshallers with ThirdPartyService{
   implicit val system: ActorSystem
   implicit val executor = system.dispatcher
   implicit val materializer: ActorMaterializer

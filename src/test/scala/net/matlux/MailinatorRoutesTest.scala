@@ -13,11 +13,11 @@ import spray.json.DefaultJsonProtocol.{jsonFormat1, jsonFormat3}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import cats.effect.IO
 import fs2.Stream
-import net.matlux.socialnetwork.SocialNetworkDomain._
-import net.matlux.socialnetwork.{JsonMarshallers, SocialNetworkServer}
+import net.matlux.mailinator.MailinatorDomain._
+import net.matlux.mailinator.{JsonMarshallers, MailinatorServer}
 
 
-class SocialNetworkServiceTest extends  WordSpec with Matchers with JsonMarshallers with ScalatestRouteTest {
+class MailinatorRoutesTest extends  WordSpec with Matchers with JsonMarshallers with ScalatestRouteTest {
 
 
   val fixtureJsonInput = """{
@@ -53,7 +53,7 @@ class SocialNetworkServiceTest extends  WordSpec with Matchers with JsonMarshall
 
 
     val config = ConfigFactory.load()
-    val routes = new SocialNetworkServer(config,system,materializer).routes
+    val routes = new MailinatorServer(config,system,materializer).routes
 
 
     "test random graph degree of connections through Rest" in {
@@ -134,6 +134,8 @@ class SocialNetworkServiceTest extends  WordSpec with Matchers with JsonMarshall
 
 
     "test scratchpad" in {
+
+
 
       extractRelationships(fixtureRelationshipGraph,"John")
 

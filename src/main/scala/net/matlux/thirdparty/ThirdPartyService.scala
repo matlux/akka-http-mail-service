@@ -1,6 +1,6 @@
 package net.matlux.thirdparty
 
-import net.matlux.socialnetwork.SocialNetworkDomain.{Person, Relationship, RelationshipGraph}
+import net.matlux.mailinator.MailinatorDomain.{Person, Relationship, RelationshipGraph}
 
 import scala.concurrent.Future
 

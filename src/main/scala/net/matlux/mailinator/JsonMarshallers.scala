@@ -1,6 +1,6 @@
-package net.matlux.socialnetwork
+package net.matlux.mailinator
 
-import net.matlux.socialnetwork.SocialNetworkDomain._
+import net.matlux.mailinator.MailinatorDomain._
 import spray.json.DefaultJsonProtocol
 
 trait JsonMarshallers extends DefaultJsonProtocol {

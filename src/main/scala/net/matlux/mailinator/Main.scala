@@ -1,4 +1,4 @@
-package net.matlux.socialnetwork
+package net.matlux.mailinator
 
 import akka.actor.ActorSystem
 import akka.event.Logging
@@ -16,6 +16,6 @@ object Main {
     val logger = Logging(system, getClass)
 
 
-    new SocialNetworkServer(config,system,materializer)
+    new MailinatorServer(config,system,materializer)
   }
 }
