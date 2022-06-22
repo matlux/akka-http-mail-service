@@ -31,23 +31,26 @@ class MailinatorRoutesTest extends  WordSpec with Matchers with JsonMarshallers 
                   ]
                   }"""
 
-  val fixtureRelationshipGraph = RelationshipGraph("facebook",List(Person("John"), Person("Harry"), Person("Peter"), Person("George"), Person("Anna")),List(Relationship("HasConnection","John","Peter"), Relationship("HasConnection","John","George"), Relationship("HasConnection","Peter","George"), Relationship("HasConnection","Peter","Anna")))
-  val fixtureRelationshipMergedGraph = RelationshipGraph("merged",List(Person("Anna"), Person("George"), Person("Harry"), Person("Peter"), Person("John")),
-    List(Relationship("HasConnection","John","Peter"), Relationship("HasConnection","John","George"), Relationship("HasConnection","Peter","Anna"), Relationship("HasConnection","Peter","George")))
 
-  val fixturePersonConnections = Set(PersonConnections("Anna",1,2), PersonConnections("Peter",3,0), PersonConnections("George",2,1), PersonConnections("Harry",0,0), PersonConnections("John",2,1))
 
-  val fixtureFacebookRelationshipGraph = RelationshipGraph("facebook",
-    List(Person("John"), Person("Harry"), Person("Peter"), Person("George"), Person("Anna")),
-    List(Relationship("HasConnection","John","Peter"),
-      Relationship("HasConnection","John","George"),
-      Relationship("HasConnection","Peter","Anna")))
 
-  val fixtureTwitterRelationshipGraph = RelationshipGraph("twitter",
-    List(Person("John"), Person("Harry"), Person("Peter"), Person("George"), Person("Anna")),
-    List(Relationship("HasConnection","John","Peter"),
-      Relationship("HasConnection","John","George"),
-      Relationship("HasConnection","Peter","George")))
+//  val fixtureRelationshipGraph = RelationshipGraph("facebook",List(Person("John"), Person("Harry"), Person("Peter"), Person("George"), Person("Anna")),List(Relationship("HasConnection","John","Peter"), Relationship("HasConnection","John","George"), Relationship("HasConnection","Peter","George"), Relationship("HasConnection","Peter","Anna")))
+//  val fixtureRelationshipMergedGraph = RelationshipGraph("merged",List(Person("Anna"), Person("George"), Person("Harry"), Person("Peter"), Person("John")),
+//    List(Relationship("HasConnection","John","Peter"), Relationship("HasConnection","John","George"), Relationship("HasConnection","Peter","Anna"), Relationship("HasConnection","Peter","George")))
+//
+//  val fixturePersonConnections = Set(PersonConnections("Anna",1,2), PersonConnections("Peter",3,0), PersonConnections("George",2,1), PersonConnections("Harry",0,0), PersonConnections("John",2,1))
+//
+//  val fixtureFacebookRelationshipGraph = RelationshipGraph("facebook",
+//    List(Person("John"), Person("Harry"), Person("Peter"), Person("George"), Person("Anna")),
+//    List(Relationship("HasConnection","John","Peter"),
+//      Relationship("HasConnection","John","George"),
+//      Relationship("HasConnection","Peter","Anna")))
+//
+//  val fixtureTwitterRelationshipGraph = RelationshipGraph("twitter",
+//    List(Person("John"), Person("Harry"), Person("Peter"), Person("George"), Person("Anna")),
+//    List(Relationship("HasConnection","John","Peter"),
+//      Relationship("HasConnection","John","George"),
+//      Relationship("HasConnection","Peter","George")))
 
   "The service" should {
 

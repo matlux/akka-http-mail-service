@@ -8,11 +8,12 @@ object MailinatorDomain {
 
   // domain model
   type EmailAddress = String
+  final case class MailboxCreated(emailAddress: String)
   final case class Message(sendTo: String, sender: String, subject: String)
-  final case class IndexedMessage(Int, sendTo: String, sender: String, subject: String)
+  final case class IndexedMessage(id :Int, sendTo: String, sender: String, subject: String)
   final case class PagedMessage(page: Int, nextPage: Option[Int], sendTo: String, sender: String, subject: String)
-  type Mailbox = SortedMap[Int,Message]
-  type MailStorage = Map[EmailAddress,Mailbox]
+
+
 
 
 

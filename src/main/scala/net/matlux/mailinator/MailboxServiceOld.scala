@@ -1,12 +1,16 @@
 package net.matlux.mailinator
 
 import MailinatorDomain._
+import net.matlux.mailinator.MailboxServiceOld.Mailboxes
 import net.matlux.utils.Atom
 
 import java.util.UUID
 import scala.collection.immutable.SortedMap;
 
-object MailboxService {
+object MailboxServiceOld {
+
+  type Mailbox = Map[Int,Message]
+  type Mailboxes = Map[String,Mailbox]
 
   def createEmptyMailbox(): Mailbox = {
     SortedMap.empty[Int, Message]
@@ -20,8 +24,8 @@ object MailboxService {
   def postNewMessage(ctx: MailStorageCtx, emailAddress: EmailAddress, message : Message): EmailAddress = {
     val emailAddress = s"${UUID.randomUUID().toString}@test.com"
     ctx.swap((mailStorage) => {
-      val mailbox = mailStorage.get(emailAddress).getOrElse();
-      val newId = if (mailbox.isEmpty) 1 else mailbox.lastKey + 1
+//      val mailbox = mailStorage.get(emailAddress).getOrElse();
+      //val newId = if (mailbox.isEmpty) 1 else mailbox.lastKey + 1
 
       mailStorage + (emailAddress -> createEmptyMailbox())})
     emailAddress
@@ -29,4 +33,4 @@ object MailboxService {
 
 }
 
-trait MailStorageCtx extends Atom[MailStorage] {}
+trait MailStorageCtx extends Atom[Mailboxes] {}

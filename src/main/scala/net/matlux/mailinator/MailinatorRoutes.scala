@@ -23,14 +23,18 @@ import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.http.scaladsl.server.Route
+import akka.pattern.ask
 import akka.stream.scaladsl.{Sink, Source}
-import net.matlux.thirdparty.ThirdPartyService
+import net.matlux.mailinator.mailboxService.MailRouter.CreateMailbox
+
+import java.util.UUID
 
 
-trait MailinatorRoutes extends JsonMarshallers with ThirdPartyService{
-  implicit val system: ActorSystem
-  implicit val executor = system.dispatcher
-  implicit val materializer: ActorMaterializer
+object MailinatorRoutes extends JsonMarshallers{
+//  implicit val system: ActorSystem
+//  implicit val executor = system.dispatcher
+//  implicit val materializer: ActorMaterializer
 
 
 
@@ -51,7 +55,7 @@ trait MailinatorRoutes extends JsonMarshallers with ThirdPartyService{
       respondWithHeader(`Access-Control-Allow-Credentials`(true))
 
 
-  val routes = enableCORS {
+  def getRoutes(mailRouter : ActorRef) : Route = enableCORS {
 
     path("health") {
       complete {
@@ -59,60 +63,79 @@ trait MailinatorRoutes extends JsonMarshallers with ThirdPartyService{
 
       }
     } ~
-      post {
-        path("graph-connections") {
-          entity(as[RelationshipGraph]) { graph =>
+      pathPrefix("mailboxes") {
 
-            val personCon = extractDeg1AndDeg2Numbers(graph)
-            complete(personCon)
-
-          }
-        }
-      } ~ post {
-          path("test-marshalling") {
-            entity(as[RelationshipGraph]) { graph =>
-              println(s"graph = $graph")
-              complete(graph)
+        extractLog { log =>
+          pathEnd {
+            post{
+              val emailAddress = createRandomEmail()
+              mailRouter ! CreateMailbox(emailAddress)
+              complete((StatusCodes.Created, MailboxCreated(emailAddress)))
             }
           }
-      } ~ get {
-        path("not-connected-people") {
-          import cats.effect.IO
-
-          val input = IO.fromFuture(IO{getSocialNetwork("facebook")})
-
-          val program: IO[RelationshipGraph] = for {
-            in <- input
-          } yield (in)
-          val graph = program.unsafeRunSync()
-
-          val nb = countNumberOfPeopleWithoutConnection(graph)
-          complete(nb.toString)
-
         }
-      } ~ get {
-      path("degree-of-connection" / Remaining) { name =>
-
-          import cats.effect.IO
-
-        val facebookGraphMonad = IO.fromFuture(IO{getSocialNetwork("facebook")})
-        val twitterGraphMonad = IO.fromFuture(IO{getSocialNetwork("twitter")})
-
-          val getFacebookGraph: IO[(RelationshipGraph,RelationshipGraph)] = for {
-            facebook <- facebookGraphMonad
-            twitter <- twitterGraphMonad
-          } yield ((facebook,twitter))
-          val (facebookGraph,twitterGraph) = getFacebookGraph.unsafeRunSync()
-
-          val item = degreeOfConnection(name,merge(facebookGraph,twitterGraph))
-          complete(item)
-
       }
-    }
+
+
+
 
   }
 
+  def createRandomEmail() = {
+    s"${UUID.randomUUID().toString}@test.com"
+  }
 
 
 }
 
+
+//      post {
+//        path("graph-connections") {
+//          entity(as[RelationshipGraph]) { graph =>
+//
+//            val personCon = extractDeg1AndDeg2Numbers(graph)
+//            complete(personCon)
+//
+//          }
+//        }
+//      } ~ post {
+//          path("test-marshalling") {
+//            entity(as[RelationshipGraph]) { graph =>
+//              println(s"graph = $graph")
+//              complete(graph)
+//            }
+//          }
+//      } ~ get {
+//        path("not-connected-people") {
+//          import cats.effect.IO
+//
+//          val input = IO.fromFuture(IO{getSocialNetwork("facebook")})
+//
+//          val program: IO[RelationshipGraph] = for {
+//            in <- input
+//          } yield (in)
+//          val graph = program.unsafeRunSync()
+//
+//          val nb = countNumberOfPeopleWithoutConnection(graph)
+//          complete(nb.toString)
+//
+//        }
+//      } ~ get {
+//      path("degree-of-connection" / Remaining) { name =>
+//
+//          import cats.effect.IO
+//
+//        val facebookGraphMonad = IO.fromFuture(IO{getSocialNetwork("facebook")})
+//        val twitterGraphMonad = IO.fromFuture(IO{getSocialNetwork("twitter")})
+//
+//          val getFacebookGraph: IO[(RelationshipGraph,RelationshipGraph)] = for {
+//            facebook <- facebookGraphMonad
+//            twitter <- twitterGraphMonad
+//          } yield ((facebook,twitter))
+//          val (facebookGraph,twitterGraph) = getFacebookGraph.unsafeRunSync()
+//
+//          val item = degreeOfConnection(name,merge(facebookGraph,twitterGraph))
+//          complete(item)
+//
+//      }
+//    }
