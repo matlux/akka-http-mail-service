@@ -125,8 +125,6 @@ object MailinatorRoutes extends JsonMarshallers{
       }
 
 
-
-
   }
 
   def createRandomEmail() = {
@@ -135,55 +133,3 @@ object MailinatorRoutes extends JsonMarshallers{
 
 
 }
-
-
-//      post {
-//        path("graph-connections") {
-//          entity(as[RelationshipGraph]) { graph =>
-//
-//            val personCon = extractDeg1AndDeg2Numbers(graph)
-//            complete(personCon)
-//
-//          }
-//        }
-//      } ~ post {
-//          path("test-marshalling") {
-//            entity(as[RelationshipGraph]) { graph =>
-//              println(s"graph = $graph")
-//              complete(graph)
-//            }
-//          }
-//      } ~ get {
-//        path("not-connected-people") {
-//          import cats.effect.IO
-//
-//          val input = IO.fromFuture(IO{getSocialNetwork("facebook")})
-//
-//          val program: IO[RelationshipGraph] = for {
-//            in <- input
-//          } yield (in)
-//          val graph = program.unsafeRunSync()
-//
-//          val nb = countNumberOfPeopleWithoutConnection(graph)
-//          complete(nb.toString)
-//
-//        }
-//      } ~ get {
-//      path("degree-of-connection" / Remaining) { name =>
-//
-//          import cats.effect.IO
-//
-//        val facebookGraphMonad = IO.fromFuture(IO{getSocialNetwork("facebook")})
-//        val twitterGraphMonad = IO.fromFuture(IO{getSocialNetwork("twitter")})
-//
-//          val getFacebookGraph: IO[(RelationshipGraph,RelationshipGraph)] = for {
-//            facebook <- facebookGraphMonad
-//            twitter <- twitterGraphMonad
-//          } yield ((facebook,twitter))
-//          val (facebookGraph,twitterGraph) = getFacebookGraph.unsafeRunSync()
-//
-//          val item = degreeOfConnection(name,merge(facebookGraph,twitterGraph))
-//          complete(item)
-//
-//      }
-//    }

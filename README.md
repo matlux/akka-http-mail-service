@@ -32,7 +32,7 @@ Please use a statically typed language for your implementation, if you know one,
 The original Mailinator service ran as a single Java process on a single machine, storing all data on the heap.
 
 - Implement a solution that stores all data entirely in-memory and in-process (do not use Redis or a similar memory store, and do not write to disk). Make sure to manage the size of the process heap to avoid OOM exceptions.
-- Include an automated benchmark suite that measures the performance of your solution. Suggest some ways to improve performance.
+- Include an automated benchmark suite that measures the performance of your solution. Suggest some ways to improve performance. ***(no implemented yet)***
 - Support receiving messages via SMTP. ***(no implemented yet)***
 
 ## Evaluation Criteria
