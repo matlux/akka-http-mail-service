@@ -1,71 +1,62 @@
-## Coding Task - Social Network Presence ##
+## Coding Task - Mailbox at Scale with Scala ##
+
+### RESTful API Service
+
+Mailinator is a web service for checking email sent to public, temporary email addresses. There are many similar services, but Mailinator was one of the first.
+
+Your task is to implement an API service that performs the same functions as Mailinator. It should expose the following HTTP endpoints.
+
+- `POST /mailboxes`: Create a new, random email address.
+- `POST /mailboxes/{email address}/messages`: Create a new message for a specific email address.
+- `GET /mailboxes/{email address}/messages`: Retrieve an index of messages sent to an email address, including sender, subject, and id, in recency order. Support cursor-based pagination through the index.
+- `GET /mailboxes/{email address}/messages/{message id}`: Retrieve a specific message by id.
+- `DELETE /mailboxes/{email address}`: Delete a specific email address and any associated messages. ***(no implemented yet)***
+- `DELETE /mailboxes/{email address}/messages/{message id}`: Delete a specific message by id. ***(no implemented yet)***
+
+Whether email addresses need to be created before they can receive messages is up to you.
+
+Additional requirements:
+
+- The input and output formats should be well-structured JSON.
+- Old messages must eventually be expired, so you'll need to implement an eviction or garbage collection strategy. ***(no implemented yet)***
+- Make sure to support concurrent access, either through multi-threading or multi-processing.
+
+Please use a statically typed language for your implementation, if you know one, and the application framework of your choice. You may use a database, but you don't have to. Document your code and include automated tests.
+
+* Used Scala
+* Used Akka-http and Actor model to implement the above requirements.
+* Used Automated testing
+
+### Extra Credit
+
+The original Mailinator service ran as a single Java process on a single machine, storing all data on the heap.
+
+- Implement a solution that stores all data entirely in-memory and in-process (do not use Redis or a similar memory store, and do not write to disk). Make sure to manage the size of the process heap to avoid OOM exceptions.
+- Include an automated benchmark suite that measures the performance of your solution. Suggest some ways to improve performance.
+- Support receiving messages via SMTP. ***(no implemented yet)***
+
+## Evaluation Criteria
+
+You will be primarily evaluated on the following points:
+
+- Functional correctness.
+- Implementation clarity and extensibility.
+- Performance-mindedness, if applicable.
+- Thoroughness of tests, if applicable.
 
 
-A third party provider has exposed an end-point for you that retrieves a graph representation using JSON like the following:
+## How to start the server with SBT
 
-Requests:
-GET https://my-third-party/facebook
-GET https://my-third-party/twitter
 
-Example response:
-```json
-{
-"sn": "facebook",
-"people": [{"name":"Jonh"},{"name":"Harry"},{"name":"Peter"}, {"name": "George"}, {"name": "Anna"}],
-"relationships": [
-    {"type": "HasConnection", "startNode": "John", "endNode": "Peter"},
-    {"type": "HasConnection", "startNode": "John", "endNode": "George"},
-    {"type": "HasConnection", "startNode": "Peter", "endNode": "George"},
-    {"type": "HasConnection", "startNode": "Peter", "endNode": "Anna"}
-]
-}
+
+### Launch the server directly from SBT (dev mode)
+
+```bash
+sbt run
 ```
 
-In the example response above we can count the connections by their **minimum** degrees of separation like this:
 
-|        | 1 degree | 2 degrees |
-|--------|----------|-----------|
-| John   | 2        | 1         |
-| Peter  | 3        | 0         |
-| George | 2        | 1         |
-| Harry  | 0        | 0         |
-| Anna   | 1        | 2         |
-
-You have been assigned to develop a Rest API that will consume the one above.
-
-### User Stories ###
-
-As a user, I want to query how many people are not connected to anyone for the given social network so I know who to propose new connections to.
-
-    Given a social network name Facebook
-    And a full Facebook graph
-    Return count of people with no connections
-
-
-As a user, I want to query how many people are connected to a given person by 1 or 2 degrees of separation for all social networks (facebook and twitter) so I understand her/his social influence.
-
-    Given a person name Peter
-    And a Facebook graph for Peter
-    And a Twitter graph for Peter
-    Return count of connections of 1 degree + count of connections of 2 degree
-
-### Hints ###
-- Define a trait that will be interface used against third party API, you don't need to provide any implementation.
-- Third party endpoint can return a graph representation for just one social network per request.
-
-### Bonus points ###
-Write the associated client to be re-used in other codes bases.
-
-### Considerations ###
-- We are looking for a solution where the candidate shows its skills around clean code and functional programming.
-- We do not expect you to host this Rest API or having it fully working, just a test suit that we can run using your preferred build tool.
-- We expect you not to spend more than a few hours on this task so we can discuss your prioritisation, design approach and quality aspects in the face to face technical interview.
-- Deadline: 72 hours since the test is delivered.
-
-
-## SBT mode
-
-### Building and Running the Application:
+### Building and Running the Application (prod):
 
 Build the application:
 
@@ -76,60 +67,13 @@ sbt universal:stage
 Run the application that was built:
 
 ```bash
-target/universal/stage/bin/akka-http-social-network
-```
-
-### Launch the server directly from SBT
-
-```bash
-sbt run
+target/universal/stage/bin/akka-http-mailinator
 ```
 
 ## test the service with curl on localhost
 
 ```bash
-curl http://localhost:8080/compute
-```
-
-## Docker Stuff
-
-Launch in a Docker container. You need to have Docker and Docker Compose installed.
-
-```bash
-$ docker-compose up
-```
-
-Launch image
-
-```bash
-docker images
-docker run -it -p 8080:8080 akkahttpsocialnetwork_webservice
+curl http://localhost:8080/[rest end point]
 ```
 
 
-## OpenShift
-
-### Log in into OpenShift
-
-```bash
-oc login -u [login] [openshift url]
-```
-
-### Deploy on OpenShift
-
-```bash
-git commit -m "changed version"
-git push origin master
-oc start-build service-layer-template --follow
-```
-
-### test Streaming with curl
-
-curl -O [url service]/streaming
-
-## Useful Links
-
-* [Akka HTTP - The What, Why and How](https://www.youtube.com/watch?v=y_slPbktLr0) (Video)
-* [Akka HTTP documentation](http://doc.akka.io/docs/akka-stream-and-http-experimental/1.0-RC4/scala/http/)
-* [Akka HTTP Microservice Example](https://www.typesafe.com/activator/template/akka-http-microservice) (Tutorial with code)
-* [Docker documentation](https://docs.docker.com/)

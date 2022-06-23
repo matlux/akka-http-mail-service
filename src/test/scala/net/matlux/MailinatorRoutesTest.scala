@@ -23,6 +23,8 @@ class MailinatorRoutesTest extends  WordSpec with Matchers with JsonMarshallers 
 
 
   val fixtureEmailJsonInput = """{"from":"a@f","to":"b@f","subject":"topic","content":"blabla"}"""
+  val fixtureEmailJsonInput2 = """{"from":"a2@f","to":"b2@f","subject":"topic2","content":"blabla2"}"""
+  val fixtureEmailJsonInput3 = """{"from":"a3@f","to":"b3@f","subject":"topic3","content":"blabla3"}"""
 
 
 
@@ -93,7 +95,7 @@ class MailinatorRoutesTest extends  WordSpec with Matchers with JsonMarshallers 
 
     }
 
-    "As a user, I want to post and retreive an email." in {
+    "As a user, I want to post, list and retreive a bunch of emails. (Integration Test)" in {
 
       Post("/mailboxes") ~> routes ~> check {
         val value = responseAs[MailboxCreated]
@@ -113,6 +115,33 @@ class MailinatorRoutesTest extends  WordSpec with Matchers with JsonMarshallers 
           Get("/mailboxes/" + value.emailAddress + "/messages?page=1&size=30") ~> routes ~> check {
             val mailsInfo = responseAs[PagedMailsInfo]
             mailsInfo.mails.size  shouldEqual 1
+
+            Post("/mailboxes/" + value.emailAddress + "/messages", HttpEntity(ContentTypes.`application/json`, fixtureEmailJsonInput2)) ~> routes ~> check {
+              val mail = responseAs[Mail]
+              mail.content  shouldEqual "blabla2"
+
+              Get("/mailboxes/" + value.emailAddress + "/messages?page=1&size=30") ~> routes ~> check {
+                val mailsInfo = responseAs[PagedMailsInfo]
+                mailsInfo.mails.size  shouldEqual 2
+
+                Post("/mailboxes/" + value.emailAddress + "/messages", HttpEntity(ContentTypes.`application/json`, fixtureEmailJsonInput3)) ~> routes ~> check {
+                  val mail = responseAs[Mail]
+                  mail.content  shouldEqual "blabla3"
+                  Get("/mailboxes/" + value.emailAddress + "/messages?page=1&size=2") ~> routes ~> check {
+                    val mailsInfo = responseAs[PagedMailsInfo]
+                    mailsInfo.mails.size  shouldEqual 2
+                    Get("/mailboxes/" + value.emailAddress + "/messages?page=2&size=2") ~> routes ~> check {
+                      val mailsInfo = responseAs[PagedMailsInfo]
+                      mailsInfo.mails.size  shouldEqual 1
+                      Get("/mailboxes/" + value.emailAddress + "/messages/2") ~> routes ~> check {
+                        val mail = responseAs[Mail]
+                        mail.content  shouldEqual "blabla2"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
 
         }
